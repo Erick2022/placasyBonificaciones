@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placas y Bonificaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Consulta de Bonificaciones</h1>
+    <label for="placas">Ingresa las placas separadas por comas:</label>
+    <input type="text" id="placas" placeholder="Ejemplo: BLI704, AKZ876">
+    <button onclick="procesarPlacas()">Consultar Bonificaciones</button>
+     <!-- Indicador de carga -->
+     <div id="loader" class="loader" style="display: none;">
+     </div>
+    <div class="result" id="resultado">
+        <!-- Los resultados aparecerán aquí -->
+    </div>
+</div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+<!-- yape al programador -->
+<div class="ad-container">
+    <div class="message">
+        <p>Yapea <span class="number">S/.1</span> al programador...</p>
+
+    </div>
+    <img class="image" src="{{ url_for('static', filename='img/21320185072024-04-18T16-18-22.png') }}"
+    alt="yapea al programador...!!!" />
+</div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
