@@ -18,7 +18,7 @@ pillow==11.0.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pyparsing==3.2.1
-pytesseract==0.3.13ls
+pytesseract==0.3.13
 requests==2.32.3
 requests-oauthlib==2.0.0
 rsa==4.9
