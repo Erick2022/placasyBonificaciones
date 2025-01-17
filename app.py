@@ -4,29 +4,26 @@ from PIL import Image
 import os
 from flask import Flask, render_template, request, jsonify
 import time
-from config import ruta_pdf, ruta_guardado_imagenes
+from config.config import ruta_pdf, ruta_guardado_imagenes, credentials
 import logging
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# Crear directorios si no existen
+os.makedirs(ruta_pdf, exist_ok=True)
+os.makedirs(ruta_guardado_imagenes, exist_ok=True)
+
+# Configuración de logging
 logging.basicConfig(level=logging.DEBUG)
+logging.debug("Iniciando aplicación Flask...")
+
+print(f"RUTA_PDF: {ruta_pdf}")
+print(f"RUTA_GUARDADO_IMAGENES: {ruta_guardado_imagenes}")
 
 app = Flask(__name__)
 
-##############################################################################################
-# Verificar y crear las carpetas si no existen  (usando las rutas dinámicas)
-
-for ruta in [ruta_pdf, ruta_guardado_imagenes]:
-    if not os.path.exists(ruta):
-        os.makedirs(ruta)
-        print(f"Directorio creado: {ruta}")
-    else:
-        print(f"El directorio ya existe: {ruta}")
-################################################################################################
-
 # Palabras clave a buscar en las imágenes extraídas
-palabras_clave = ["BONIFICACION", "AUTORIZACION","RESOLUCION SUBDIRECTORAL"]
+palabras_clave = ["BONIFICACION", "AUTORIZACION", "RESOLUCION SUBDIRECTORAL"]
 
 # Función para extraer texto de las imágenes usando OCR
 def extraer_texto_de_imagen(imagen):
@@ -58,10 +55,6 @@ def procesar_pdf(pdf_path):
 
     return resultados
 
-# Asegurarse de que la carpeta de destino exista
-if not os.path.exists(ruta_guardado_imagenes):
-    os.makedirs(ruta_guardado_imagenes)
-
 # Ruta para mostrar el formulario
 @app.route('/')
 def index():
@@ -91,7 +84,7 @@ def procesar_placas():
         return jsonify({"resultados": resultados})
     else:
         return jsonify({"error": "No se encontraron bonificaciones para las placas ingresadas."}), 200
-
+    
 @app.route('/listar_archivos_drive', methods=['GET'])
 def listar_archivos_drive():
     try:
@@ -110,8 +103,7 @@ def listar_archivos_drive():
 
     except HttpError as error:
         return jsonify({'error': f'An error occurred: {error}'})
-
-
+        
 @app.route('/process', methods=['GET'])
 def process():
     # Simular un proceso largo (por ejemplo, 20 segundos)
@@ -129,5 +121,4 @@ def process():
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
-    
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))

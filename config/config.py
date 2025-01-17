@@ -21,11 +21,20 @@ except json.JSONDecodeError as e:
 ruta_pdf = os.getenv("RUTA_PDF", "/home/fedoraerick/Descargas/placasBONIFICACIONESBACKUS")
 ruta_guardado_imagenes = os.getenv("RUTA_GUARDADO_IMAGENES", "/home/fedoraerick/Documentos/bonificaciones_extraidas")
 
-# Crear las credenciales a partir del contenido JSON
+# Crear las carpetas si no existen
+for ruta in [ruta_pdf, ruta_guardado_imagenes]:
+    if not os.path.exists(ruta):
+        os.makedirs(ruta)
+        print(f"Directorio creado: {ruta}")
+    else:
+        print(f"El directorio ya existe: {ruta}")
+
+# Crear las credenciales a partir del contenido JSON    
 try:
     credentials = service_account.Credentials.from_service_account_info(credentials_info)
 except Exception as e:
     raise ValueError(f"Error al crear las credenciales de servicio: {e}")
 
 # Define los alcances necesarios para tu aplicación
-SCOPES = ['https://www.googleapis.com/auth/drive']  # Agrega más scopes si los necesitas
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']  # Asegúrate de que el alcance es correcto
+credentials = credentials.with_scopes(SCOPES)

@@ -2,11 +2,15 @@ services:
   - type: web
     name: placasybonificaciones
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn --config gunicorn_config.py app:app"
     branch: main
     envVars:
-      - key: FLASK_ENV
-        value: production
-
-
+      - key: FLASK_APP
+        value: app.py
+      - key: GOOGLE_CREDENTIALS_JSON
+        value: /opt/render/secrets/google_credentials.json
+      - key: RUTA_PDF
+        value: /opt/render/project/files/pdf
+      - key: RUTA_GUARDADO_IMAGENES
+        value: /opt/render/project/files/imagenes
