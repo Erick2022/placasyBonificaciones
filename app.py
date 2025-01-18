@@ -20,6 +20,7 @@ logging.debug("Iniciando aplicación Flask...")
 print(f"RUTA_PDF: {ruta_pdf}")
 print(f"RUTA_GUARDADO_IMAGENES: {ruta_guardado_imagenes}")
 
+# Crear la instancia de Flask
 app = Flask(__name__)
 
 # Palabras clave a buscar en las imágenes extraídas
