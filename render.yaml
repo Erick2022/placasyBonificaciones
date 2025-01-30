@@ -3,7 +3,7 @@ services:
     name: placasybonificaciones
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn wsgi:app"
+    startCommand: "gunicorn --bind 0.0.0.0:10000 app:app"
     branch: main
     envVars:
       - key: FLASK_APP
