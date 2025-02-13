@@ -90,8 +90,6 @@ requests-oauthlib==2.0.0
 rpm==4.19.1.1
 rsa==4.9
 scour==0.38.2
-selinux @ file:///builddir/build/BUILD/libselinux-3.5/src
-sepolicy @ file:///builddir/build/BUILD/selinux-3.5/python/sepolicy
 setools==4.4.3
 setuptools==75.8.0
 simpleaudio==1.0.4
