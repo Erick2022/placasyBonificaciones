@@ -6,3 +6,4 @@ __pycache__/
 *.pyo
 venv/
 config/eco-composition-447221-p2-0b84417002f6.json
+credenciales.json
