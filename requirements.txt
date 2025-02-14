@@ -12,7 +12,6 @@ cryptography==44.0.0
 cssselect==1.1.0
 dasbus==1.7
 distro==1.8.0
-dnf==4.21.1
 fedora-third-party==0.10
 file-magic==0.4.0
 Flask==3.0.3
