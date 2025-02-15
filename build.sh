@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
-apt-get update && apt-get install -y libparted-dev
+set -o errexit  # Detiene la ejecución si hay errores
+
+echo "Instalando dependencias de Python..."
+pip install --no-cache-dir -r requirements.txt
+
