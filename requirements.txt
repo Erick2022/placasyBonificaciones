@@ -46,7 +46,6 @@ productmd==1.38
 proto-plus==1.25.0
 protobuf==5.29.3
 ptyprocess==0.7.0
-pwquality==1.4.5
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycairo==1.25.1
