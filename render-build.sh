@@ -13,4 +13,4 @@ apt-get update && apt-get install -y \
     libtesseract-dev
 
 # Actualizar pip antes de instalar dependencias
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
