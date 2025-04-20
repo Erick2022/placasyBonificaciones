@@ -1,116 +1,94 @@
-/* Reset básico */
-* {
-  margin: 0;
+body {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+.container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+h1 {
+  color: #333;
+  text-align: center;
+}
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+button:hover {
+  background-color: #45a049;
+}
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+  display: none;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.resaltado {
+  background-color: yellow;
+  font-weight: bold;
+  padding: 0 2px;
+}
+#resultado {
+  margin-top: 20px;
+}
+#resultado ul {
+  list-style-type: none;
   padding: 0;
-  box-sizing: border-box; /* Incluye borde y padding en el tamaño total del elemento */
 }
-
- body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 620px;
-            margin: 0 auto; /* Centra el contenedor */
-            padding: 20px;
-            background-color: #fff; /* Color de fondo */
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0; 
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .result {
-            margin-top: 20px;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-        }
-     .resaltado {
-        background-color: yellow;
-        font-weight: bold;
-     }
-
+#resultado li {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border-left: 3px solid #4CAF50;
+}
+/* Estilos para el contenedor de yape */
 .ad-container {
-    max-width: 510px;
-    background-color: #ffff8b; /* Color de fondo */
-    padding: 20px; /* Espaciado interno */
-    border-radius: 30px; /* Bordes redondeados */
-    margin: 20px auto; /* Centro horizontal y margen superior */
-    text-align: center; /* Centra el contenido dentro del contenedor */
-  
-  }
-  .number {
-    font-size: 40px;
-    font-weight: bold; /* Negrita para resaltar */
-    color: #333; /* Color de texto */   
-  }
-  
-  .image {
-    max-width: 400px; /* Asegura que la imagen no exceda el ancho del contenedor */
-    height: 350px; /* Mantiene la proporción de la imagen */
-    display: block; /* Centra la imagen con margin: auto */
-    margin: 10px auto; /* Espaciado superior e inferior */
-  }
-  #loader {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 50%; /* Posición vertical centrada */
-    left: 50%; /* Posición horizontal centrada */
-    width: 200px;
-    height: 200px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    z-index: 1000;
-    transform: translate(-50%, -50%); /* Ajusta el centro del círculo */
+  margin-top: 30px;
+  text-align: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
-
-  .loader {
-    border: 8px solid #e0e0e0; /* Color gris claro */
-    border-top: 8px solid #f32a0f; /* Rojo */
-    border-radius: 50%;
-    width: 150px;
-    height: 150px;
-    animation: spin 1.5s linear infinite;
-  }
-  .resaltado {  
-    font-weight: bold;
-    color: #f32a0f; /* rojo */
+.message {
+  font-size: 16px;
+  color: #495057;
 }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(180deg); }
-  }
-  @media (max-width: 480px) { /* Pantallas pequeñas, como smartphones */
-    #loader {
-      width: 150px;
-      height: 150px;
-    }
-    .loader {
-      width: 100px;
-      height: 100px;
-      border-width: 6px; /* Reduce el grosor del borde */
-    }
-  }
-  
+.number {
+  font-weight: bold;
+  color: #28a745;
+}
+.image {
+  width: 220px !important;
+  height: 220px !important;
+  object-fit: contain; /* Asegura que la imagen no se distorsione */
+  max-width: 100%;      /* Asegura que la imagen no se desborde */
+  max-height: 100%;     /* Mantiene la proporción dentro de los límites */
+}

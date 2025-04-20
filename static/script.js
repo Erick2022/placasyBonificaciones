@@ -7,17 +7,15 @@ function procesarPlacas() {
         alert('Por favor, ingrese las placas.');
         return;
     }
-      // Mostrar el círculo de carga
-  console.log("Mostrando loader...");
-  loader.style.display = "block";
-  console.log("Loader mostrado.");
-  resultado.innerHTML = "";
+    
+    // Mostrar el círculo de carga
+    console.log("Mostrando loader...");
+    loader.style.display = "block";
+    resultado.innerHTML = ""; 
     
     fetch('/procesar_placas', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ placas: placas })
     })
     .then(response => {
@@ -30,30 +28,37 @@ function procesarPlacas() {
         console.log(data);
         loader.style.display = "none"; // Ocultar el círculo de carga
 
-        const resultadoDiv = document.getElementById('resultado');
-
         if (data.error) {
-            resultadoDiv.innerHTML = `<p style="color: red;">${data.error}</p>`;
+            // 🔹 Corregido: Mostrar el mensaje de error del servidor
+            resultado.textContent = data.error;
+            resultado.style.color = "red";
         } else {
             const resultados = data.resultados;
 
             if (resultados.length === 0) {
-                resultadoDiv.innerHTML = '<p>No se encontraron bonificaciones para las placas ingresadas.</p>';
+                resultado.textContent = 'No se encontraron bonificaciones para las placas ingresadas.';
             } else {
-                const listaResultados = resultados
-                .map(res => {
-                     // Resaltar dinámicamente los números de página
-                    return `<li>${res.replace(/página (\d+)/g, "<span class='resaltado'>página $1</span>")}</li>`;
-                })
-                .join('');
-                resultadoDiv.innerHTML = `<ul>${listaResultados}</ul>`;
+                // Crear una lista segura sin manipular directamente `innerHTML`
+                const lista = document.createElement("ul");
+                resultados.forEach(res => {
+                    const li = document.createElement("li");
+                    
+                    // Resaltamos la palabra "página" de manera segura
+                    const contenidoSeguro = res.replace(/página (\d+)/g, "<span class='resaltado'>página $1</span>");
+                    li.innerHTML = DOMPurify.sanitize(contenidoSeguro); // Sanitizar la entrada antes de insertar en HTML
+                    lista.appendChild(li);
+                });
+
+                resultado.innerHTML = ""; // Limpiar antes de insertar
+                resultado.appendChild(lista);
             }
         }
     })
     .catch(error => {
-        loader.style.display = "none";// Asegurarse de ocultar el indicador de carga en caso de error
+        loader.style.display = "none"; // Asegurarse de ocultar el indicador de carga en caso de error
         console.error('Error:', error);
         alert('Hubo un problema al procesar las placas. Por favor, intente nuevamente.');
-        resultadoDiv.innerHTML = '';
+        resultado.textContent = 'Error en la solicitud. Intente más tarde.'; // 🔹 Mensaje más claro
+        resultado.style.color = "red";
     });
 }

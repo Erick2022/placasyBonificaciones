@@ -1,17 +1,54 @@
+import tempfile
 import pytesseract
 from pdf2image import convert_from_path
+import cloudinary
+import cloudinary.uploader
+from dotenv import load_dotenv
 from PIL import Image
 import os
 from flask import Flask, render_template, request, jsonify
 import time
-from config.config import ruta_pdf, ruta_guardado_imagenes, credentials
+from config.config import ruta_pdf, ruta_guardado_imagenes
 import logging
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+import requests
+from io import BytesIO
+from config  import main 
+# Cargar variables desde .env
+load_dotenv()
+
+# Configurar Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
+
+# Crear la instancia de Flask
+app = Flask(__name__)
+
+@app.route('/upload_pdf', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No se encontró archivo'}), 400
+
+    file_to_upload = request.files['file']
+
+    if file_to_upload.filename == '':
+        return jsonify({'error': 'Nombre de archivo vacío'}), 400
+
+    try:
+        result = cloudinary.uploader.upload(file_to_upload, resource_type="raw", folder="bonificaciones_pdfs")
+        return jsonify({
+            'message': 'PDF subido con éxito',
+            'url': result['secure_url']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # Crear directorios si no existen
-os.makedirs(ruta_pdf, exist_ok=True)
-os.makedirs(ruta_guardado_imagenes, exist_ok=True)
+os.makedirs(RUTA_PDF, exist_ok=True)
+os.makedirs(RUTA_GUARDADO_IMAGENES, exist_ok=True)
 
 # Configuración de logging
 logging.basicConfig(level=logging.DEBUG)
@@ -19,9 +56,6 @@ logging.debug("Iniciando aplicación Flask...")
 
 print(f"RUTA_PDF: {ruta_pdf}")
 print(f"RUTA_GUARDADO_IMAGENES: {ruta_guardado_imagenes}")
-
-# Crear la instancia de Flask
-app = Flask(__name__)
 
 # Palabras clave a buscar en las imágenes extraídas
 palabras_clave = ["BONIFICACION", "AUTORIZACION", "RESOLUCION SUBDIRECTORAL"]
@@ -33,8 +67,14 @@ def extraer_texto_de_imagen(imagen):
 
 # Función para procesar los PDFs
 def procesar_pdf(pdf_path):
+    # Usar tempfile para guardar el PDF de manera temporal
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
+        with open(pdf_path, "rb") as file:
+            tmp_file.write(file.read())  # Escribe el contenido del PDF en el archivo temporal
+        temp_path = tmp_file.name  # Obtén la ruta temporal para el PDF
+
     # Convertir el PDF en imágenes
-    imagenes = convert_from_path(pdf_path)
+    imagenes = convert_from_path(temp_path)
 
     resultados = []
 
@@ -64,47 +104,45 @@ def index():
 # Ruta para procesar las placas
 @app.route('/procesar_placas', methods=['POST'])
 def procesar_placas():
-    # Obtener las placas enviadas desde el frontend
-    placas = request.json.get('placas', '').split(',')
+    placas = request.json.get('placas', '')
     if not placas:
         return jsonify({"error": "No se proporcionaron placas"}), 400
 
-    # Limpiar las placas (eliminar espacios adicionales)
-    placas = [placa.strip() for placa in placas]
-
-    # Procesar las placas
+    placas = [placa.strip() for placa in placas.split(',')]
     resultados = []
-    # Filtrar los archivos PDF que contienen alguna de las placas ingresadas
-    archivos_pdf = [f for f in os.listdir(ruta_pdf) if f.endswith('.pdf') and any(placa in f for placa in placas)]
-    # Procesar los archivos PDF que coinciden con las placas
-    for archivo_pdf in archivos_pdf:
-        pdf_path = os.path.join(ruta_pdf, archivo_pdf)
-        resultados += procesar_pdf(pdf_path)
-    # Devolver los resultados al frontend
+
+    # Listar archivos PDF en Cloudinary
+    try:
+        recursos = cloudinary.Search() \
+            .expression("resource_type:raw AND folder:bonificaciones_pdfs") \
+            .execute()
+        
+        for item in recursos.get('resources', []):
+            file_name = item['filename']
+            file_url = item['secure_url']
+
+            if any(placa in file_name for placa in placas):
+                print(f"📄 Descargando y procesando {file_name} desde Cloudinary")
+                
+                # Descargar el archivo PDF desde Cloudinary
+                response = requests.get(file_url)
+                if response.status_code == 200:
+                    pdf_bytes = BytesIO(response.content)
+                    # Guardar temporalmente como archivo
+                    temp_path = tempfile.mktemp(suffix=".pdf")
+                    with open(temp_path, 'wb') as f:
+                        f.write(pdf_bytes.getbuffer())
+                    resultados += procesar_pdf(temp_path)
+                else:
+                    print(f"❌ Error al descargar {file_name}: {response.status_code}")
+    except Exception as e:
+        return jsonify({"error": f"Error al listar PDFs de Cloudinary: {str(e)}"}), 500
+
     if resultados:
         return jsonify({"resultados": resultados})
     else:
         return jsonify({"error": "No se encontraron bonificaciones para las placas ingresadas."}), 200
-    
-@app.route('/listar_archivos_drive', methods=['GET'])
-def listar_archivos_drive():
-    try:
-        # Crear el servicio de Google Drive con las credenciales cargadas desde config.py
-        service = build('drive', 'v3', credentials=credentials)
 
-        # Listar los archivos en Google Drive
-        results = service.files().list(pageSize=10, fields="files(id, name)").execute()
-        items = results.get('files', [])
-
-        if not items:
-            return jsonify({'message': 'No files found on Google Drive.'})
-        else:
-            files = [{'name': item['name'], 'id': item['id']} for item in items]
-            return jsonify({'files': files})
-
-    except HttpError as error:
-        return jsonify({'error': f'An error occurred: {error}'})
-        
 @app.route('/process', methods=['GET'])
 def process():
     # Simular un proceso largo (por ejemplo, 20 segundos)
@@ -122,4 +160,5 @@ def process():
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+  main()
+

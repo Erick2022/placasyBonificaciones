@@ -3,14 +3,17 @@ services:
     name: placasybonificaciones
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --bind 0.0.0.0:10000 app:app"
+    startCommand: "gunicorn app:app"
+    plan: free
     branch: main
     envVars:
-      - key: FLASK_APP
-        value: app.py
-      - key: GOOGLE_CREDENTIALS_JSON
-        value: /opt/render/secrets/google_credentials.json
+      - key: CLOUDINARY_CLOUD_NAME
+        value: djz7qvh0h
+      - key: CLOUDINARY_API_KEY
+        value: 179951398732257
+      - key: CLOUDINARY_API_SECRET
+        value: FzkwBK7bM4CIr_BbhTfXOepdFpw
       - key: RUTA_PDF
-        value: /opt/render/project/files/pdf
+        value: /tmp/pdf
       - key: RUTA_GUARDADO_IMAGENES
-        value: /opt/render/project/files/imagenes
+        value: /tmp/images

@@ -1,91 +1,102 @@
 import os
-import json
-import io
+import cloudinary
+import cloudinary.api
+import cloudinary.search
 from dotenv import load_dotenv
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+import platform  # Detectar el sistema operativo
+import requests
 
-# Cargar las variables de entorno
+# Cargar variables de entorno
 load_dotenv()
 
-# Validar y cargar GOOGLE_CREDENTIALS_JSON
-google_credentials_path = os.getenv('GOOGLE_CREDENTIALS_JSON_PATH')
-
-if not google_credentials_path:
-    raise ValueError("⚠️ GOOGLE_CREDENTIALS_JSON_PATH no está definido en el entorno.")
-
-if not os.path.exists(google_credentials_path):
-    raise FileNotFoundError(f"⚠️ No se encontró el archivo de credenciales en {google_credentials_path}")
-
+# Configurar Cloudinary
 try:
-    with open(google_credentials_path, "r") as f:
-        credentials_info = json.load(f)
-    
-    credentials = service_account.Credentials.from_service_account_info(credentials_info)
-    print("✅ Credenciales cargadas correctamente.")
-except json.JSONDecodeError as e:
-    raise ValueError(f"❌ Error al decodificar GOOGLE_CREDENTIALS_JSON_PATH: {e}")
+    cloudinary.config(
+        cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.getenv("CLOUDINARY_API_KEY"),
+        api_secret=os.getenv("CLOUDINARY_API_SECRET")
+    )
+
+    # Verificar que los valores de Cloudinary estén configurados
+    if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudinary.config().api_secret]):
+        raise ValueError("⚠️ Las credenciales de Cloudinary no están configuradas correctamente en el archivo .env")
 except Exception as e:
-    raise RuntimeError(f"❌ Error inesperado al cargar credenciales: {e}")
+    raise RuntimeError(f"Error al configurar Cloudinary: {e}")
 
-# Obtener rutas desde el entorno o usar valores predeterminados
-ruta_pdf = os.getenv("RUTA_PDF", "/home/fedoraerick/Descargas/placas_BONIFICACIONES")
-ruta_guardado_imagenes = os.getenv("RUTA_GUARDADO_IMAGENES", "/home/fedoraerick/Documentos/bonificaciones_extraidas")
+# Detectar el sistema operativo
+def obtener_rutas():
+    sistema_operativo = platform.system().lower()  # 'windows', 'linux', 'darwin'
 
-print(f"📂 Ruta PDF: {ruta_pdf}")
-print(f"📂 Ruta de guardado de imágenes: {ruta_guardado_imagenes}")
+    if sistema_operativo == "linux":
+        ruta_pdf = os.getenv("RUTA_PDF_LINUX")
+        ruta_guardado_imagenes = os.getenv("RUTA_GUARDADO_IMAGENES_LINUX")
+    elif sistema_operativo == "windows":
+        ruta_pdf = os.getenv("RUTA_PDF_WINDOWS")
+        ruta_guardado_imagenes = os.getenv("RUTA_GUARDADO_IMAGENES_WINDOWS")
+    else:
+        raise ValueError(f"⚠️ Sistema operativo no compatible: {sistema_operativo}")
 
-# Crear las carpetas si no existen
-for ruta in [ruta_pdf, ruta_guardado_imagenes]:
-    os.makedirs(ruta, exist_ok=True)
+    # Validar que las rutas estén definidas
+    if not ruta_pdf or not ruta_guardado_imagenes:
+        raise ValueError("⚠️ Las rutas no están configuradas correctamente en el archivo .env")
 
-# Definir los alcances necesarios para Google Drive
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-credentials = credentials.with_scopes(SCOPES)
+    return ruta_pdf, ruta_guardado_imagenes
 
-# Autenticar y crear el servicio de Google Drive
-service = build('drive', 'v3', credentials=credentials)
-
-# ID de la carpeta en Google Drive
-FOLDER_ID = "10iA3Md5lnMh1FwMsAf50OaFD9A4KnQv_"
-
-def listar_archivos_en_drive(folder_id):
-    """Lista los archivos dentro de una carpeta en Google Drive."""
+# Crear directorios si no existen
+def crear_directorios(ruta_pdf, ruta_guardado_imagenes):
     try:
-        query = f"'{folder_id}' in parents and trashed=false"
-        results = service.files().list(q=query, fields="files(id, name)").execute()
-        return results.get('files', [])
+        os.makedirs(ruta_pdf, exist_ok=True)
+        os.makedirs(ruta_guardado_imagenes, exist_ok=True)
     except Exception as e:
-        print(f"❌ Error al listar archivos en Google Drive: {e}")
-        return []
+        raise RuntimeError(f"⚠️ Error al crear los directorios: {e}")
 
-def descargar_archivo(file_id, file_name, destino):
-    """Descarga un archivo de Google Drive solo si no existe en el destino."""
-    file_path = os.path.join(destino, file_name)
-    
-    if os.path.exists(file_path):
-        print(f"📂 El archivo {file_name} ya existe. Omitiendo descarga.")
-        return
-    
+# Función para descargar archivo desde Cloudinary
+def descargar_archivo(public_id, nombre_archivo, ruta_destino):
     try:
-        request = service.files().get_media(fileId=file_id)
-        
-        with open(file_path, "wb") as f:
-            downloader = MediaIoBaseDownload(f, request)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-                print(f"⬇️ Descargando {file_name}... {int(status.progress() * 100)}%")
-        
-        print(f"✅ Descarga completa: {file_path}")
+        url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/raw/upload/{public_id}.pdf"
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(os.path.join(ruta_destino, nombre_archivo), 'wb') as f:
+                f.write(response.content)
+            print(f"✅ Archivo {nombre_archivo} descargado exitosamente.")
+        else:
+            print(f"❌ Error {response.status_code} al descargar {nombre_archivo}: {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Error al descargar el archivo {nombre_archivo}: {e}")
     except Exception as e:
-        print(f"❌ Error al descargar {file_name}: {e}")
+        print(f"❌ Error inesperado al descargar el archivo {nombre_archivo}: {e}")
 
-# Listar archivos en la carpeta de Drive
-archivos = listar_archivos_en_drive(FOLDER_ID)
+# Buscar y descargar archivos desde Cloudinary
+def buscar_y_descargar_archivos(ruta_pdf):
+    try:
+        recursos = cloudinary.search.Search() \
+            .expression("resource_type:raw AND folder:bonificaciones_pdfs") \
+            .execute()
 
-# Descargar cada archivo en la carpeta local
-for archivo in archivos:
-    print(f"📥 Descargando: {archivo['name']}")
-    descargar_archivo(archivo['id'], archivo['name'], ruta_pdf)
+        if 'resources' in recursos:
+            for archivo in recursos['resources']:
+                archivo_id = archivo['public_id']  # ID completo, incluyendo la carpeta
+                archivo_nombre = archivo['filename'] + '.pdf'
+                print(f"📥 Descargando: {archivo_nombre}")
+                descargar_archivo(archivo_id, archivo_nombre, ruta_pdf)
+        else:
+            print("⚠️ No se encontraron archivos en Cloudinary.")
+    except cloudinary.exceptions.Error as e:
+        print(f"❌ Error al intentar buscar los archivos: {e}")
+    except Exception as e:
+        print(f"❌ Error inesperado durante la búsqueda y descarga: {e}")
+
+# Flujo principal
+def main():
+    try:
+        ruta_pdf, ruta_guardado_imagenes = obtener_rutas()
+        crear_directorios(ruta_pdf, ruta_guardado_imagenes)
+        print(f"📂 Ruta PDF: {ruta_pdf}")
+        print(f"📂 Ruta de guardado de imágenes: {ruta_guardado_imagenes}")
+        buscar_y_descargar_archivos(ruta_pdf)
+    except Exception as e:
+        print(f"❌ Error en la ejecución principal: {e}")
+
+# Ejecutar el flujo principal
+if __name__ == "__main__":
+    main()

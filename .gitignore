@@ -1,9 +1,29 @@
-.vercel
-.vercel
+# Ignorar el archivo .env (contiene variables sensibles)
 .env
+
+# Ignorar archivos generados por Python
 __pycache__/
 *.pyc
 *.pyo
+
+# Ignorar entornos virtuales
 venv/
-config/eco-composition-447221-p2-0b84417002f6.json
+
+# Ignorar configuración de Render si no es necesaria en el repositorio
+render.yaml
+
+# Ignorar configuraciones y archivos específicos de Vercel (si ya no usas Vercel)
+.vercel
+
+# Ignorar credenciales de servicios (si tienes archivos como credenciales.json o similares)
 credenciales.json
+config/eco-composition-447221-p2-0b84417002f6.json
+
+# Ignorar carpetas de herramientas de desarrollo
+.vscode/
+.idea/
+
+# Ignorar otros archivos generados
+*.log
+*.bak
+
