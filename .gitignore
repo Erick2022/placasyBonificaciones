@@ -8,6 +8,7 @@ __pycache__/
 
 # Ignorar entornos virtuales
 venv/
+env/
 
 # Ignorar configuración de Render si no es necesaria en el repositorio
 render.yaml
